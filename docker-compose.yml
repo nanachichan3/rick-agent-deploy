@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  rick:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/nanachichan3/rick-agent-deploy:latest
+    container_name: factory-rick
+    restart: unless-stopped
+    volumes:
+      - rick-data:/data/.openclaw
+      - rick-workspace:/data/workspace
+    environment:
+      - RICK_MODEL=${RICK_MODEL:-minimax/minimax-m2.7}
+      - RICK_INFERENCE_PROVIDER=${RICK_INFERENCE_PROVIDER:-openrouter}
+      - RICK_GATEWAY_PORT=${RICK_GATEWAY_PORT:-18791}
+      - GATEWAY_ALLOW_ALL_USERS=${GATEWAY_ALLOW_ALL_USERS:-false}
+      - DISCORD_ALLOWED_USERS=${DISCORD_ALLOWED_USERS:-588858125126336544,1484966987321835733}
+      - "DISCORD_REQUIRE_MENTION=${DISCORD_REQUIRE_MENTION:-false}"
+      - DISCORD_ALLOW_BOTS=${DISCORD_ALLOW_BOTS:-all}
+      - DISCORD_FREE_RESPONSE_CHANNELS=${DISCORD_FREE_RESPONSE_CHANNELS:-1489982401445888000,1489982424594251920,1484900474363842643}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      # Temporal
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
+      - TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
+      # DB
+      - BOT_COORDINATION_DB_HOST=${BOT_COORDINATION_DB_HOST:-x0k4w8404wckwwcswg808gco}
+      - BOT_COORDINATION_DB_PORT=${BOT_COORDINATION_DB_PORT:-5432}
+      - BOT_COORDINATION_DB_USER=${BOT_COORDINATION_DB_USER:-postgres}
+      - BOT_COORDINATION_DB_PASS=${BOT_COORDINATION_DB_PASS:-WFBGCo6cjCf7NbxVfkPSe5x0P41v3d27MowubhpPmfk9CgrfcMhBUvp8lyCfjobL}
+      - BOT_COORDINATION_DB_NAME=${BOT_COORDINATION_DB_NAME:-projects}
+      - PROJECTS_MCP_DATABASE_URL=${PROJECTS_MCP_DATABASE_URL:-postgres://postgres:WFBGCo6cjCf7NbxVfkPSe5x0P41v3d27MowubhpPmfk9CgrfcMhBUvp8lyCfjobL@x0k4w8404wckwwcswg808gco:5432/projects}
+      # Workspace git sync
+      - WORKSPACE_GIT_URL=${RICK_WORKSPACE_GIT_URL:-}
+      - WORKSPACE_GIT_REF=${RICK_WORKSPACE_GIT_REF:-main}
+      - WORKSPACE_GIT_TOKEN=${WORKSPACE_GIT_TOKEN:-}
+    ports:
+      - "18791:18791"
+    networks:
+      - factory-net
+
+volumes:
+  rick-data:
+    driver: local
+  rick-workspace:
+    driver: local
+
+networks:
+  factory-net:
+    external: true
