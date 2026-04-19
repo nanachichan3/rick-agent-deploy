@@ -16,6 +16,7 @@ USER node
 
 # Copy Rick-specific files
 COPY --chown=node:node rick-agent/ /home/node/rick-agent/
+RUN chmod +x /home/node/rick-agent/entrypoint.sh
 
 WORKDIR /data/workspace/startup-factory
 
