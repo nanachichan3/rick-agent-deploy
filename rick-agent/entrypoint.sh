@@ -4,31 +4,31 @@ set -e
 # ============================================================
 # Rick — Startup Factory OS Agent Entrypoint
 # ============================================================
-# Single agent: Rick. Starts OpenClaw gateway + optional cron.
 
 RICK_HOME="${RICK_HOME:-/home/node}"
-CONFIG_DIR="${RICK_HOME}/.openclaw"
+CONFIG_DIR="$RICK_HOME/.openclaw/rick"
 WORKSPACE_DIR="${WORKSPACE_DIR:-/data/workspace/startup-factory}"
 GATEWAY_PORT="${RICK_GATEWAY_PORT:-18791}"
+OPENCLAW_APP="/opt/openclaw/app"
+NODE_BIN="/usr/local/bin/node"
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$WORKSPACE_DIR"
 
-echo "[rick] Starting Startup Factory OS agent..."
+echo "[rick] Starting Startup Factory OS..."
 echo "[rick] Gateway port: $GATEWAY_PORT"
 echo "[rick] Workspace: $WORKSPACE_DIR"
 
 # ── Git sync workspace ──────────────────────────────────────
 if [ -n "$WORKSPACE_GIT_URL" ] && [ -d "$WORKSPACE_DIR/.git" ]; then
     echo "[rick] Git syncing workspace..."
-    cd "$WORKSPACE_DIR"
-    git pull origin main --rebase 2>/dev/null || echo "[rick] Git sync skipped (no changes or not a git repo)"
+    cd "$WORKSPACE_DIR" && git pull origin main --rebase 2>/dev/null || echo "[rick] Git sync skipped"
 elif [ -n "$WORKSPACE_GIT_URL" ]; then
     echo "[rick] Cloning workspace: $WORKSPACE_GIT_URL"
-    git clone "$WORKSPACE_GIT_URL" "$WORKSPACE_DIR" 2>/dev/null || echo "[rick] Clone failed"
+    git clone "$WORKSPACE_GIT_URL" "$WORKSPACE_DIR" 2>/dev/null || echo "[rick] Clone skipped"
 fi
 
-# ── Write agents.json for this single agent ─────────────────
+# ── Write agents.json ────────────────────────────────────────
 cat > "$CONFIG_DIR/agents.json" << 'AGENTS'
 [
   {
@@ -40,13 +40,13 @@ cat > "$CONFIG_DIR/agents.json" << 'AGENTS'
 ]
 AGENTS
 
-# ── Write .env for DB + Temporal ────────────────────────────
+# ── Write .env ────────────────────────────────────────────────
 cat > "$CONFIG_DIR/.env" << ENVEOF
 RICK_GATEWAY_PORT=${RICK_GATEWAY_PORT:-18791}
 DISCORD_ALLOWED_USERS=${DISCORD_ALLOWED_USERS:-588858125126336544,1484966987321835733}
 DISCORD_REQUIRE_MENTION=${DISCORD_REQUIRE_MENTION:-false}
 DISCORD_FREE_RESPONSE_CHANNELS=${DISCORD_FREE_RESPONSE_CHANNELS:-1489982401445888000,1489982424594251920,1484900474363842643}
-TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
+TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-https://zpcahptj6ryfiti37abe0ind.qed.quest}
 TEMPORAL_NAMESPACE=${TEMPORAL_NAMESPACE:-default}
 BOT_COORDINATION_DB_HOST=${BOT_COORDINATION_DB_HOST:-x0k4w8404wckwwcswg808gco}
 BOT_COORDINATION_DB_PORT=${BOT_COORDINATION_DB_PORT:-5432}
@@ -58,12 +58,13 @@ OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
 DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
 ENVEOF
 
-echo "[rick] Config written to $CONFIG_DIR"
+echo "[rick] Config written."
 
-# ── Start OpenClaw gateway ──────────────────────────────────
-echo "[rick] Starting gateway on port $GATEWAY_PORT..."
+# ── Start gateway ─────────────────────────────────────────────
+echo "[rick] Starting OpenClaw gateway on port $GATEWAY_PORT..."
 
-exec node dist/index.js gateway \
+cd "$OPENCLAW_APP"
+exec "$NODE_BIN" dist/index.js gateway \
     --bind lan \
     --port "$GATEWAY_PORT" \
     --workspace "$WORKSPACE_DIR" \
